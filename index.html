@@ -130,10 +130,32 @@ const state = {
 function getQuestions() {
   const qs = [];
 
-  // Q1: OS選択
+  // Q1: インストール状態
   qs.push({
     id: 'q1',
     num: 1,
+    tag: '【インストール状態】',
+    text: 'クロコ（Claude Code）のインストール状況を教えてください',
+    note: '現在の状況を正直に選んでください。',
+    buttons: [
+      { label: 'まだ何もしていない', value: 'none',    color: 'green'  },
+      { label: '途中まで試した',    value: 'partial', color: 'orange' },
+      { label: 'インストール完了',  value: 'done',    color: 'purple' },
+    ],
+    key: 'install',
+    alert: state.install === 'done'
+      ? { type: 'stop', text: 'このオフ会はクロコを「これからインストールする初心者」を対象にしています。\n参加は歓迎しますが、インストール後の活用方法・技術的なアドバイスなどには対応できません。' }
+      : null,
+    cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
+  });
+
+  // Q2以降はインストール未完了の場合のみ表示
+  if (!state.install || state.install === 'done') return qs;
+
+  // Q2: OS選択
+  qs.push({
+    id: 'q2',
+    num: 2,
     tag: '【端末確認】',
     text: 'ノートパソコンの種類を教えてください',
     note: 'スマホ・タブレットでは「クロコ」は動きません。',
@@ -146,11 +168,11 @@ function getQuestions() {
     cardClass: state.os ? 'answered-ok' : '',
   });
 
-  // Q2: OS バージョン（OS選択後に表示）
+  // Q3: OS バージョン（OS選択後に表示）
   if (state.os === 'mac') {
     qs.push({
-      id: 'q2',
-      num: 2,
+      id: 'q3',
+      num: 3,
       tag: '【OS確認】',
       text: 'macOS のバージョンを教えてください',
       note: 'クロコ（Claude Code デスクトップ版）は macOS Tahoe（15）以上での動作が推奨されています。',
@@ -168,8 +190,8 @@ function getQuestions() {
 
   if (state.os === 'win') {
     qs.push({
-      id: 'q2',
-      num: 2,
+      id: 'q3',
+      num: 3,
       tag: '【OS確認】',
       text: 'PC を購入したのはいつ頃ですか？',
       note: '購入から 5 年以上経過した PC は Windows 11 非対応の場合があり、クロコが動かない可能性があります。',
@@ -185,35 +207,15 @@ function getQuestions() {
     });
   }
 
-  // Q3: インストール状態（端末が選ばれたら表示）
-  if (state.os && state.os !== 'other') {
-    qs.push({
-      id: 'q3',
-      num: 3,
-      tag: '【インストール状態】',
-      text: 'クロコ（Claude Code）のインストール状況を教えてください',
-      note: '現在の状況を正直に選んでください。',
-      buttons: [
-        { label: 'まだ何もしていない', value: 'none',    color: 'green'  },
-        { label: '途中まで試した',    value: 'partial', color: 'orange' },
-        { label: 'インストール完了',  value: 'done',    color: 'purple' },
-      ],
-      key: 'install',
-      alert: state.install === 'done'
-        ? { type: 'stop', text: 'このオフ会はクロコを「これからインストールする初心者」を対象にしています。\n参加は歓迎しますが、インストール後の活用方法・技術的なアドバイスなどには対応できません。' }
-        : null,
-      cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
-    });
-  }
-
-  // 以下はインストール未完了の場合のみ表示
-  const showRest = state.os && state.os !== 'other' && state.install && state.install !== 'done';
+  // 以下はOS・OSバージョンまで回答済みの場合のみ表示
+  const showRest = state.os && state.osVersion;
 
   if (showRest) {
     qs.push({
       id: 'q4',
       num: 4,
       tag: '【認証確認】',
+
       text: 'スマホで SMS（ショートメッセージ）を受信できますか？',
       note: '認証番号が届かないとアカウントが作れません。「自分宛てにテスト送信」して確認してください。',
       buttons: [
@@ -317,9 +319,9 @@ function render() {
 
 function choose(key, value) {
   state[key] = value;
-  // OS を変えたら依存項目をリセット
-  if (key === 'os') { state.osVersion = null; state.install = null; resetRestState(); }
-  if (key === 'install') { resetRestState(); }
+  if (key === 'install')   { state.os = null; state.osVersion = null; resetRestState(); }
+  if (key === 'os')        { state.osVersion = null; resetRestState(); }
+  if (key === 'osVersion') { resetRestState(); }
   render();
 }
 
@@ -332,16 +334,9 @@ function updateDraft(qs) {
   const statusEl = document.getElementById('draft-status');
   const draftEl  = document.getElementById('draft');
 
-  // インストール完了の警告
+  // インストール完了時は下書き不要
   if (state.install === 'done') {
-    statusEl.innerHTML = `<div class="alert alert-stop" style="margin-bottom:10px">⛔ インストール済みのため、このオフ会の対象外です。</div>`;
-    draftEl.value = '';
-    return;
-  }
-
-  // OS が other
-  if (state.os === 'other') {
-    statusEl.innerHTML = `<div class="alert alert-ng" style="margin-bottom:10px">ノートパソコンでの参加が必要です。</div>`;
+    statusEl.innerHTML = '';
     draftEl.value = '';
     return;
   }
@@ -356,25 +351,25 @@ function updateDraft(qs) {
   }
 
   // 下書き構築
-  const osLabel = state.os === 'mac' ? '🍎 Mac' : '🪟 Windows';
+  const installLabel = { none: 'まだ何もしていない', partial: '途中まで試した' }[state.install] || '';
+  const osLabel = state.os === 'mac' ? 'Mac' : 'Windows';
 
   let osVerLabel = '';
   if (state.os === 'mac') {
-    osVerLabel = state.osVersion === 'tahoe' ? 'Tahoe（macOS 15）✅' : 'Sequoia以前 / 不明 ⚠️';
+    osVerLabel = state.osVersion === 'tahoe' ? 'Tahoe（macOS 15）' : 'Sequoia以前 / 不明';
   } else {
-    const map = { new: '2022年以降 ✅', old: '2021年以前（5年以上前）⚠️' };
+    const map = { new: '2022年以降', old: '2021年以前（5年以上前）' };
     osVerLabel = map[state.osVersion] || '';
   }
 
-  const installLabel = { none: 'まだ何もしていない ✅', partial: '途中まで試した ⏳' }[state.install] || '';
-  const yn = v => v === 'yes' ? '✅ Yes' : '❌ No';
+  const yn = v => v === 'yes' ? 'Yes' : 'No';
 
   const lines = [
     '問診チェック結果をお伝えします。',
     '',
-    `1. 端末：${osLabel}`,
-    `2. OS：${osVerLabel}`,
-    `3. インストール状況：${installLabel}`,
+    `1. インストール状況：${installLabel}`,
+    `2. 端末：${osLabel}`,
+    `3. OS：${osVerLabel}`,
     `4. SMS受信：${yn(state.sms)}`,
     `5. PCログイン：${yn(state.login)}`,
     `6. Googleアカウント：${yn(state.google)}`,
