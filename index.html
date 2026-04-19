@@ -76,8 +76,7 @@
 
 <div class="container">
   <div class="intro">
-    インストールをスムーズに進めるため、以下の項目を確認してください。<br>
-    <span class="caution">⚠️ このオフ会は「クロコをこれからインストールする初心者」専用です。<br>インストール済みの方・活用方法の相談はご遠慮ください。</span>
+    こんにちは。IT活用コンサルタントのサバ缶です。オフ会の受付代わりに、以下の問診チェックの結果をこのチャットで教えてください！
   </div>
 
   <div id="q-list"></div>
@@ -133,17 +132,17 @@ function getQuestions() {
       id: 'q2',
       num: 2,
       tag: '【OS確認】',
-      text: 'macOS は最新版にアップデート済みですか？',
-      note: '古いままだとインストールに失敗します。オフ会中にアップデートすると時間内に終わりません。',
+      text: 'macOS のバージョンを教えてください',
+      note: 'クロコ（Claude Code デスクトップ版）は macOS Tahoe（15）以上での動作が推奨されています。',
       buttons: [
-        { label: '✅ 済み', value: 'yes', color: 'green' },
-        { label: '❌ まだ', value: 'no',  color: 'red'   },
+        { label: '🆕 Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
+        { label: '⚠️ Sequoia 以前 / わからない', value: 'old', color: 'orange' },
       ],
       key: 'osVersion',
-      alert: state.osVersion === 'no'
-        ? { type: 'ng', text: '事前に「システム設定 → 一般 → ソフトウェアアップデート」から最新版にしてきてください。' }
+      alert: state.osVersion === 'old'
+        ? { type: 'warn', text: '⚠️ macOS Tahoe（15）以外ではクロコが動作しない可能性があります。\n事前に「システム設定 → 一般 → ソフトウェアアップデート」から Tahoe にアップデートしてください。\nオフ会当日のアップデートは時間内に終わりません。' }
         : null,
-      cardClass: state.osVersion === 'yes' ? 'answered-ok' : state.osVersion === 'no' ? 'answered-ng' : '',
+      cardClass: state.osVersion === 'tahoe' ? 'answered-ok' : state.osVersion === 'old' ? 'answered-warn' : '',
     });
   }
 
@@ -153,19 +152,16 @@ function getQuestions() {
       num: 2,
       tag: '【OS確認】',
       text: 'PC を購入したのはいつ頃ですか？',
-      note: 'Windows 11 に対応できるかの目安として確認します。古い PC では動作しない場合があります。',
+      note: '購入から 5 年以上経過した PC は Windows 11 非対応の場合があり、クロコが動かない可能性があります。',
       buttons: [
-        { label: '2023年以降',  value: 'new', color: 'green'  },
-        { label: '2020〜2022年', value: 'mid', color: 'orange' },
-        { label: '2019年以前',  value: 'old', color: 'red'    },
+        { label: '2022年以降（4年以内）', value: 'new', color: 'green'  },
+        { label: '2021年以前（5年以上前）', value: 'old', color: 'orange' },
       ],
       key: 'osVersion',
       alert: state.osVersion === 'old'
-        ? { type: 'ng',   text: '古い PC は Windows 11 非対応の可能性があります。事前にスペックをご確認ください。' }
-        : state.osVersion === 'mid'
-        ? { type: 'warn', text: '機種によっては Windows 11 に対応していない場合があります。「Windows Update」で最新状態にしてきてください。' }
+        ? { type: 'warn', text: '⚠️ 購入から 5 年以上経過した PC は Windows 11 非対応の可能性があります。\nクロコが動作しない場合があるため、事前にスペックをご確認ください。\nWindows Update で最新状態にしてからご参加ください。' }
         : null,
-      cardClass: state.osVersion === 'new' ? 'answered-ok' : state.osVersion === 'mid' ? 'answered-warn' : state.osVersion === 'old' ? 'answered-ng' : '',
+      cardClass: state.osVersion === 'new' ? 'answered-ok' : state.osVersion === 'old' ? 'answered-warn' : '',
     });
   }
 
@@ -344,9 +340,9 @@ function updateDraft(qs) {
 
   let osVerLabel = '';
   if (state.os === 'mac') {
-    osVerLabel = state.osVersion === 'yes' ? 'アップデート済み ✅' : 'まだ ❌';
+    osVerLabel = state.osVersion === 'tahoe' ? 'Tahoe（macOS 15）✅' : 'Sequoia以前 / 不明 ⚠️';
   } else {
-    const map = { new: '2023年以降 ✅', mid: '2020〜2022年 ⚠️', old: '2019年以前 ❌' };
+    const map = { new: '2022年以降 ✅', old: '2021年以前（5年以上前）⚠️' };
     osVerLabel = map[state.osVersion] || '';
   }
 
@@ -366,9 +362,8 @@ function updateDraft(qs) {
   ];
 
   const ngItems = [];
-  if (state.os === 'mac' && state.osVersion === 'no') ngItems.push('macOS が古い');
-  if (state.os === 'win' && state.osVersion === 'old') ngItems.push('PC が古い（2019年以前）');
-  if (state.os === 'win' && state.osVersion === 'mid') ngItems.push('PC の世代を要確認（2020〜2022年）');
+  if (state.os === 'mac' && state.osVersion === 'old') ngItems.push('macOS が Tahoe 未満の可能性あり');
+  if (state.os === 'win' && state.osVersion === 'old') ngItems.push('PC が古い（5年以上前）');
   if (state.sms    === 'no')  ngItems.push('SMS受信できない');
   if (state.login  === 'no')  ngItems.push('PCにログインできない');
   if (state.google === 'no')  ngItems.push('Googleアカウントなし');
