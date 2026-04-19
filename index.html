@@ -149,8 +149,8 @@ function getQuestions() {
     cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
   });
 
-  // Q2以降はインストール未完了の場合のみ表示
-  if (!state.install || state.install === 'done') return qs;
+  // Q2以降はインストール状況を選んだ後に表示
+  if (!state.install) return qs;
 
   // Q2: OS選択
   qs.push({
@@ -207,7 +207,7 @@ function getQuestions() {
     });
   }
 
-  // 以下はOS・OSバージョンまで回答済みの場合のみ表示
+  // 以下はOS・OSバージョンまで回答済みの場合に表示
   const showRest = state.os && state.osVersion;
 
   if (showRest) {
@@ -334,13 +334,6 @@ function updateDraft(qs) {
   const statusEl = document.getElementById('draft-status');
   const draftEl  = document.getElementById('draft');
 
-  // インストール完了時は下書き不要
-  if (state.install === 'done') {
-    statusEl.innerHTML = '';
-    draftEl.value = '';
-    return;
-  }
-
   // 未回答チェック
   const required = qs.map(q => q.key);
   const unanswered = required.filter(k => state[k] === null);
@@ -351,7 +344,7 @@ function updateDraft(qs) {
   }
 
   // 下書き構築
-  const installLabel = { none: 'まだ何もしていない', partial: '途中まで試した' }[state.install] || '';
+  const installLabel = { none: 'まだ何もしていない', partial: '途中まで試した', done: 'インストール完了' }[state.install] || '';
   const osLabel = state.os === 'mac' ? 'Mac' : 'Windows';
 
   let osVerLabel = '';
