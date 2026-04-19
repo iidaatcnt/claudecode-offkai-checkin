@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クロコ導入 問診チェック</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; background: #f0f2f5; color: #333; }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+  header { background: #1a1a2e; color: white; padding: 20px 16px; text-align: center; }
+  header h1 { font-size: 1.2rem; font-weight: bold; }
+  header p { font-size: 0.82rem; color: #aaa; margin-top: 4px; }
+
+  .intro { background: white; padding: 14px 16px; font-size: 0.88rem; line-height: 1.6; }
+  .intro .caution { color: #c0392b; font-size: 0.82rem; margin-top: 8px; font-weight: bold; }
+
+  /* 質問カード */
+  .q-card { background: white; border-radius: 8px; margin: 12px 0; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid #ccc; transition: border-color 0.2s; }
+  .q-card.answered-ok   { border-left-color: #27ae60; }
+  .q-card.answered-warn { border-left-color: #e67e22; }
+  .q-card.answered-ng   { border-left-color: #e74c3c; }
+  .q-card.answered-stop { border-left-color: #8e44ad; }
+
+  .q-num  { font-size: 0.72rem; color: #999; margin-bottom: 4px; }
+  .q-text { font-size: 0.95rem; font-weight: bold; line-height: 1.5; margin-bottom: 12px; }
+
+  /* ボタングループ */
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { padding: 10px 16px; border: 2px solid #ccc; border-radius: 6px; background: white; font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { opacity: 0.8; }
+
+  .btn-green  { color: #27ae60; border-color: #27ae60; }
+  .btn-red    { color: #e74c3c; border-color: #e74c3c; }
+  .btn-blue   { color: #2980b9; border-color: #2980b9; }
+  .btn-orange { color: #e67e22; border-color: #e67e22; }
+  .btn-purple { color: #8e44ad; border-color: #8e44ad; }
+  .btn-gray   { color: #7f8c8d; border-color: #7f8c8d; }
+
+  .btn-green.active  { background: #27ae60; color: white; }
+  .btn-red.active    { background: #e74c3c; color: white; }
+  .btn-blue.active   { background: #2980b9; color: white; }
+  .btn-orange.active { background: #e67e22; color: white; }
+  .btn-purple.active { background: #8e44ad; color: white; }
+  .btn-gray.active   { background: #7f8c8d; color: white; }
+
+  .q-note { font-size: 0.8rem; color: #666; margin-top: 10px; line-height: 1.5; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+
+  /* 警告ブロック */
+  .alert { border-radius: 6px; padding: 12px 14px; font-size: 0.88rem; line-height: 1.6; margin-top: 10px; }
+  .alert-stop  { background: #f5eef8; border: 1px solid #8e44ad; color: #6c3483; }
+  .alert-warn  { background: #fef9e7; border: 1px solid #e67e22; color: #935116; }
+  .alert-ng    { background: #fdedec; border: 1px solid #e74c3c; color: #922b21; }
+  .alert-ok    { background: #eafaf1; border: 1px solid #27ae60; color: #1e8449; }
+
+  /* 下書きエリア */
+  .result-box { background: white; border-radius: 8px; margin: 16px 0; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .result-box h2 { font-size: 1rem; margin-bottom: 10px; }
+
+  textarea { width: 100%; height: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 10px; font-size: 0.85rem; resize: none; font-family: inherit; line-height: 1.7; background: #fafafa; }
+
+  .copy-btn  { display: block; width: 100%; margin-top: 10px; padding: 12px; background: #1a1a2e; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+  .copy-btn:active { opacity: 0.8; }
+  .copy-msg  { text-align: center; font-size: 0.82rem; color: #27ae60; margin-top: 6px; min-height: 18px; }
+  .reset-btn { display: block; width: 100%; margin-top: 8px; padding: 10px; background: white; color: #888; border: 1px solid #ccc; border-radius: 6px; font-size: 0.88rem; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🐱 クロコ導入 問診チェック</h1>
+  <p>IT活用コンサルタント サバ缶</p>
+</header>
+
+<div class="container">
+  <div class="intro">
+    インストールをスムーズに進めるため、以下の項目を確認してください。<br>
+    <span class="caution">⚠️ このオフ会は「クロコをこれからインストールする初心者」専用です。<br>インストール済みの方・活用方法の相談はご遠慮ください。</span>
+  </div>
+
+  <div id="q-list"></div>
+
+  <div class="result-box">
+    <h2>📋 チャットに貼り付ける下書き</h2>
+    <div id="draft-status"></div>
+    <textarea id="draft" readonly placeholder="すべての質問に答えると、ここに下書きが表示されます。"></textarea>
+    <button class="copy-btn" onclick="copyDraft()">コピーする</button>
+    <div class="copy-msg" id="copy-msg"></div>
+    <button class="reset-btn" onclick="resetAll()">リセット</button>
+  </div>
+</div>
+
+<script>
+// ---- 状態 ----
+const state = {
+  os: null,          // 'mac' | 'win'
+  osVersion: null,   // mac: 'yes'|'no'  /  win: 'new'|'mid'|'old'
+  sms: null,         // 'yes'|'no'
+  login: null,       // 'yes'|'no'
+  google: null,      // 'yes'|'no'
+  budget: null,      // 'yes'|'no'
+  install: null,     // 'none'|'partial'|'done'
+};
+
+// ---- 質問定義 ----
+function getQuestions() {
+  const qs = [];
+
+  // Q1: OS選択
+  qs.push({
+    id: 'q1',
+    num: 1,
+    tag: '【端末確認】',
+    text: 'ノートパソコンの種類を教えてください',
+    note: 'スマホ・タブレットでは「クロコ」は動きません。',
+    buttons: [
+      { label: '🍎 Mac', value: 'mac', color: 'blue' },
+      { label: '🪟 Windows', value: 'win', color: 'blue' },
+      { label: '❌ スマホ / タブレット', value: 'other', color: 'red' },
+    ],
+    key: 'os',
+    alert: state.os === 'other'
+      ? { type: 'ng', text: 'スマホ・タブレットではクロコは動きません。ノートパソコンをご持参ください。' }
+      : null,
+    cardClass: state.os === 'other' ? 'answered-ng' : state.os ? 'answered-ok' : '',
+  });
+
+  // Q2: OS バージョン（OS選択後に表示）
+  if (state.os === 'mac') {
+    qs.push({
+      id: 'q2',
+      num: 2,
+      tag: '【OS確認】',
+      text: 'macOS は最新版にアップデート済みですか？',
+      note: '古いままだとインストールに失敗します。オフ会中にアップデートすると時間内に終わりません。',
+      buttons: [
+        { label: '✅ 済み', value: 'yes', color: 'green' },
+        { label: '❌ まだ', value: 'no',  color: 'red'   },
+      ],
+      key: 'osVersion',
+      alert: state.osVersion === 'no'
+        ? { type: 'ng', text: '事前に「システム設定 → 一般 → ソフトウェアアップデート」から最新版にしてきてください。' }
+        : null,
+      cardClass: state.osVersion === 'yes' ? 'answered-ok' : state.osVersion === 'no' ? 'answered-ng' : '',
+    });
+  }
+
+  if (state.os === 'win') {
+    qs.push({
+      id: 'q2',
+      num: 2,
+      tag: '【OS確認】',
+      text: 'PC を購入したのはいつ頃ですか？',
+      note: 'Windows 11 に対応できるかの目安として確認します。古い PC では動作しない場合があります。',
+      buttons: [
+        { label: '2023年以降',  value: 'new', color: 'green'  },
+        { label: '2020〜2022年', value: 'mid', color: 'orange' },
+        { label: '2019年以前',  value: 'old', color: 'red'    },
+      ],
+      key: 'osVersion',
+      alert: state.osVersion === 'old'
+        ? { type: 'ng',   text: '古い PC は Windows 11 非対応の可能性があります。事前にスペックをご確認ください。' }
+        : state.osVersion === 'mid'
+        ? { type: 'warn', text: '機種によっては Windows 11 に対応していない場合があります。「Windows Update」で最新状態にしてきてください。' }
+        : null,
+      cardClass: state.osVersion === 'new' ? 'answered-ok' : state.osVersion === 'mid' ? 'answered-warn' : state.osVersion === 'old' ? 'answered-ng' : '',
+    });
+  }
+
+  // Q3: インストール状態（端末が選ばれたら表示）
+  if (state.os && state.os !== 'other') {
+    qs.push({
+      id: 'q3',
+      num: 3,
+      tag: '【インストール状態】',
+      text: 'クロコ（Claude Code）のインストール状況を教えてください',
+      note: '現在の状況を正直に選んでください。',
+      buttons: [
+        { label: '🔲 まだ何もしていない', value: 'none',    color: 'gray'   },
+        { label: '⏳ 途中まで試した',      value: 'partial', color: 'orange' },
+        { label: '✅ インストール完了',    value: 'done',    color: 'purple' },
+      ],
+      key: 'install',
+      alert: state.install === 'done'
+        ? { type: 'stop', text: '⛔ このオフ会はクロコを「これからインストールする初心者」を対象にしています。\nインストール済みの方の活用方法・技術的な質問にはお答えできません。\n恐れ入りますが、今回のご参加はご遠慮いただけますと幸いです。' }
+        : null,
+      cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
+    });
+  }
+
+  // 以下はインストール未完了の場合のみ表示
+  const showRest = state.os && state.os !== 'other' && state.install && state.install !== 'done';
+
+  if (showRest) {
+    qs.push({
+      id: 'q4',
+      num: 4,
+      tag: '【認証確認】',
+      text: 'スマホで SMS（ショートメッセージ）を受信できますか？',
+      note: '認証番号が届かないとアカウントが作れません。「自分宛てにテスト送信」して確認してください。',
+      buttons: [
+        { label: '✅ Yes', value: 'yes', color: 'green' },
+        { label: '❌ No',  value: 'no',  color: 'red'   },
+      ],
+      key: 'sms',
+      alert: state.sms === 'no'
+        ? { type: 'ng', text: 'SMS を受信できないとアカウントが作れません。キャリア設定やフィルターをご確認ください。' }
+        : null,
+      cardClass: state.sms === 'yes' ? 'answered-ok' : state.sms === 'no' ? 'answered-ng' : '',
+    });
+
+    qs.push({
+      id: 'q5',
+      num: 5,
+      tag: '【セキュリティ】',
+      text: 'PC にログイン（ロック解除）できますか？',
+      note: 'パスワード（PIN）を忘れていると、ソフトのインストールが一切できません。',
+      buttons: [
+        { label: '✅ Yes', value: 'yes', color: 'green' },
+        { label: '❌ No',  value: 'no',  color: 'red'   },
+      ],
+      key: 'login',
+      alert: state.login === 'no'
+        ? { type: 'ng', text: '事前にパスワードを確認・リセットしてからご参加ください。' }
+        : null,
+      cardClass: state.login === 'yes' ? 'answered-ok' : state.login === 'no' ? 'answered-ng' : '',
+    });
+
+    qs.push({
+      id: 'q6',
+      num: 6,
+      tag: '【アカウント】',
+      text: 'Google アカウント（Gmail）をお持ちですか？',
+      note: 'ログインや認証に必要です。アカウント未作成の場合は事前に作成してください。',
+      buttons: [
+        { label: '✅ Yes', value: 'yes', color: 'green' },
+        { label: '❌ No',  value: 'no',  color: 'red'   },
+      ],
+      key: 'google',
+      alert: state.google === 'no'
+        ? { type: 'warn', text: '事前に Google アカウントを作成してきてください（無料）。' }
+        : null,
+      cardClass: state.google === 'yes' ? 'answered-ok' : state.google === 'no' ? 'answered-ng' : '',
+    });
+
+    qs.push({
+      id: 'q7',
+      num: 7,
+      tag: '【予算確認】',
+      text: '有料版（月額 22 ドル）の支払いができるクレジットカードをお持ちですか？',
+      note: 'クロコは有料プラン専用です。デビットカード・プリペイドカードは使えない場合があります。',
+      buttons: [
+        { label: '✅ Yes', value: 'yes', color: 'green' },
+        { label: '❌ No',  value: 'no',  color: 'red'   },
+      ],
+      key: 'budget',
+      alert: state.budget === 'no'
+        ? { type: 'ng', text: '有料プランの登録にクレジットカードが必要です。事前にご準備ください。' }
+        : null,
+      cardClass: state.budget === 'yes' ? 'answered-ok' : state.budget === 'no' ? 'answered-ng' : '',
+    });
+  }
+
+  return qs;
+}
+
+// ---- 描画 ----
+function render() {
+  const qs = getQuestions();
+  const container = document.getElementById('q-list');
+  container.innerHTML = '';
+
+  qs.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'q-card ' + (q.cardClass || '');
+
+    const btns = q.buttons.map(b => {
+      const active = state[q.key] === b.value ? ' active' : '';
+      return `<button class="btn btn-${b.color}${active}" onclick="choose('${q.key}','${b.value}')">${b.label}</button>`;
+    }).join('');
+
+    let alertHtml = '';
+    if (q.alert) {
+      alertHtml = `<div class="alert alert-${q.alert.type}">${q.alert.text.replace(/\n/g,'<br>')}</div>`;
+    }
+
+    div.innerHTML = `
+      <div class="q-num">${q.num}. ${q.tag}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="btn-group">${btns}</div>
+      ${alertHtml}
+      <div class="q-note">💡 ${q.note}</div>
+    `;
+    container.appendChild(div);
+  });
+
+  updateDraft(qs);
+}
+
+function choose(key, value) {
+  state[key] = value;
+  // OS を変えたら依存項目をリセット
+  if (key === 'os') { state.osVersion = null; state.install = null; resetRestState(); }
+  if (key === 'install') { resetRestState(); }
+  render();
+}
+
+function resetRestState() {
+  state.sms = null; state.login = null; state.google = null; state.budget = null;
+}
+
+// ---- 下書き生成 ----
+function updateDraft(qs) {
+  const statusEl = document.getElementById('draft-status');
+  const draftEl  = document.getElementById('draft');
+
+  // インストール完了の警告
+  if (state.install === 'done') {
+    statusEl.innerHTML = `<div class="alert alert-stop" style="margin-bottom:10px">⛔ インストール済みのため、このオフ会の対象外です。</div>`;
+    draftEl.value = '';
+    return;
+  }
+
+  // OS が other
+  if (state.os === 'other') {
+    statusEl.innerHTML = `<div class="alert alert-ng" style="margin-bottom:10px">ノートパソコンでの参加が必要です。</div>`;
+    draftEl.value = '';
+    return;
+  }
+
+  // 未回答チェック
+  const required = qs.map(q => q.key);
+  const unanswered = required.filter(k => state[k] === null);
+  if (unanswered.length > 0) {
+    statusEl.innerHTML = '';
+    draftEl.value = '';
+    return;
+  }
+
+  // 下書き構築
+  const osLabel = state.os === 'mac' ? '🍎 Mac' : '🪟 Windows';
+
+  let osVerLabel = '';
+  if (state.os === 'mac') {
+    osVerLabel = state.osVersion === 'yes' ? 'アップデート済み ✅' : 'まだ ❌';
+  } else {
+    const map = { new: '2023年以降 ✅', mid: '2020〜2022年 ⚠️', old: '2019年以前 ❌' };
+    osVerLabel = map[state.osVersion] || '';
+  }
+
+  const installLabel = { none: 'まだ何もしていない ✅', partial: '途中まで試した ⏳' }[state.install] || '';
+  const yn = v => v === 'yes' ? '✅ Yes' : '❌ No';
+
+  const lines = [
+    '問診チェック結果をお伝えします。',
+    '',
+    `1. 端末：${osLabel}`,
+    `2. OS：${osVerLabel}`,
+    `3. インストール状況：${installLabel}`,
+    `4. SMS受信：${yn(state.sms)}`,
+    `5. PCログイン：${yn(state.login)}`,
+    `6. Googleアカウント：${yn(state.google)}`,
+    `7. 予算（クレカ）：${yn(state.budget)}`,
+  ];
+
+  const ngItems = [];
+  if (state.os === 'mac' && state.osVersion === 'no') ngItems.push('macOS が古い');
+  if (state.os === 'win' && state.osVersion === 'old') ngItems.push('PC が古い（2019年以前）');
+  if (state.os === 'win' && state.osVersion === 'mid') ngItems.push('PC の世代を要確認（2020〜2022年）');
+  if (state.sms    === 'no')  ngItems.push('SMS受信できない');
+  if (state.login  === 'no')  ngItems.push('PCにログインできない');
+  if (state.google === 'no')  ngItems.push('Googleアカウントなし');
+  if (state.budget === 'no')  ngItems.push('クレジットカードなし');
+
+  if (ngItems.length > 0) {
+    lines.push('', `⚠️ 要確認：${ngItems.join(' / ')}`);
+    statusEl.innerHTML = `<div class="alert alert-warn" style="margin-bottom:10px">⚠️ 要確認の項目があります。下書きをコピーして送ってください。</div>`;
+  } else {
+    lines.push('', '全項目クリアです！よろしくお願いします 😊');
+    statusEl.innerHTML = `<div class="alert alert-ok" style="margin-bottom:10px">✅ 全項目OK！下書きをコピーして送ってください。</div>`;
+  }
+
+  draftEl.value = lines.join('\n');
+}
+
+function copyDraft() {
+  const draft = document.getElementById('draft');
+  if (!draft.value) return;
+  navigator.clipboard.writeText(draft.value).then(() => {
+    const msg = document.getElementById('copy-msg');
+    msg.textContent = 'コピーしました！';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+  });
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k => { state[k] = null; });
+  document.getElementById('copy-msg').textContent = '';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
