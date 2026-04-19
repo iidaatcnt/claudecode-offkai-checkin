@@ -93,8 +93,8 @@
 <body>
 
 <header>
-  <h1>🐱 クロコ導入 問診チェック</h1>
-  <p>IT活用コンサルタント サバ缶</p>
+  <h1>クロコ導入 問診チェック</h1>
+  <p>Claude Code デスクトップアプリ版</p>
 </header>
 
 <div class="container">
@@ -138,8 +138,8 @@ function getQuestions() {
     text: 'ノートパソコンの種類を教えてください',
     note: 'スマホ・タブレットでは「クロコ」は動きません。',
     buttons: [
-      { label: '🍎 Mac', value: 'mac', color: 'blue' },
-      { label: '🪟 Windows', value: 'win', color: 'blue' },
+      { label: 'Mac', value: 'mac', color: 'green' },
+      { label: 'Windows', value: 'win', color: 'blue' },
     ],
     key: 'os',
     alert: null,
@@ -155,8 +155,8 @@ function getQuestions() {
       text: 'macOS のバージョンを教えてください',
       note: 'クロコ（Claude Code デスクトップ版）は macOS Tahoe（15）以上での動作が推奨されています。',
       buttons: [
-        { label: '🆕 Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
-        { label: '⚠️ Sequoia 以前 / わからない', value: 'old', color: 'orange' },
+        { label: 'Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
+        { label: 'Sequoia 以前 / わからない', value: 'old', color: 'orange' },
       ],
       key: 'osVersion',
       alert: state.osVersion === 'old'
@@ -194,9 +194,9 @@ function getQuestions() {
       text: 'クロコ（Claude Code）のインストール状況を教えてください',
       note: '現在の状況を正直に選んでください。',
       buttons: [
-        { label: '🔲 まだ何もしていない', value: 'none',    color: 'gray'   },
-        { label: '⏳ 途中まで試した',      value: 'partial', color: 'orange' },
-        { label: '✅ インストール完了',    value: 'done',    color: 'purple' },
+        { label: 'まだ何もしていない', value: 'none',    color: 'green'  },
+        { label: '途中まで試した',    value: 'partial', color: 'orange' },
+        { label: 'インストール完了',  value: 'done',    color: 'purple' },
       ],
       key: 'install',
       alert: state.install === 'done'
@@ -217,8 +217,8 @@ function getQuestions() {
       text: 'スマホで SMS（ショートメッセージ）を受信できますか？',
       note: '認証番号が届かないとアカウントが作れません。「自分宛てにテスト送信」して確認してください。',
       buttons: [
-        { label: '✅ Yes', value: 'yes', color: 'green' },
-        { label: '❌ No',  value: 'no',  color: 'red'   },
+        { label: 'Yes', value: 'yes', color: 'green' },
+        { label: 'No',  value: 'no',  color: 'red'   },
       ],
       key: 'sms',
       alert: state.sms === 'no'
@@ -234,8 +234,8 @@ function getQuestions() {
       text: 'PC にログイン（ロック解除）できますか？',
       note: 'パスワード（PIN）を忘れていると、ソフトのインストールが一切できません。',
       buttons: [
-        { label: '✅ Yes', value: 'yes', color: 'green' },
-        { label: '❌ No',  value: 'no',  color: 'red'   },
+        { label: 'Yes', value: 'yes', color: 'green' },
+        { label: 'No',  value: 'no',  color: 'red'   },
       ],
       key: 'login',
       alert: state.login === 'no'
@@ -251,8 +251,8 @@ function getQuestions() {
       text: 'Google アカウント（Gmail）をお持ちですか？',
       note: 'ログインや認証に必要です。アカウント未作成の場合は事前に作成してください。',
       buttons: [
-        { label: '✅ Yes', value: 'yes', color: 'green' },
-        { label: '❌ No',  value: 'no',  color: 'red'   },
+        { label: 'Yes', value: 'yes', color: 'green' },
+        { label: 'No',  value: 'no',  color: 'red'   },
       ],
       key: 'google',
       alert: state.google === 'no'
@@ -268,8 +268,8 @@ function getQuestions() {
       text: '有料版（月額 22 ドル）の支払いができるクレジットカードをお持ちですか？',
       note: 'クロコは有料プラン専用です。デビットカード・プリペイドカードは使えない場合があります。',
       buttons: [
-        { label: '✅ Yes', value: 'yes', color: 'green' },
-        { label: '❌ No',  value: 'no',  color: 'red'   },
+        { label: 'Yes', value: 'yes', color: 'green' },
+        { label: 'No',  value: 'no',  color: 'red'   },
       ],
       key: 'budget',
       alert: state.budget === 'no'
