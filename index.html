@@ -200,7 +200,7 @@ function getQuestions() {
       ],
       key: 'install',
       alert: state.install === 'done'
-        ? { type: 'stop', text: '⛔ このオフ会はクロコを「これからインストールする初心者」を対象にしています。\nインストール済みの方の活用方法・技術的な質問にはお答えできません。\n恐れ入りますが、今回のご参加はご遠慮いただけますと幸いです。' }
+        ? { type: 'stop', text: 'このオフ会はクロコを「これからインストールする初心者」を対象にしています。\n参加は歓迎しますが、インストール後の活用方法・技術的なアドバイスなどには対応できません。' }
         : null,
       cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
     });
