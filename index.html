@@ -117,13 +117,10 @@ function getQuestions() {
     buttons: [
       { label: '🍎 Mac', value: 'mac', color: 'blue' },
       { label: '🪟 Windows', value: 'win', color: 'blue' },
-      { label: '❌ スマホ / タブレット', value: 'other', color: 'red' },
     ],
     key: 'os',
-    alert: state.os === 'other'
-      ? { type: 'ng', text: 'スマホ・タブレットではクロコは動きません。ノートパソコンをご持参ください。' }
-      : null,
-    cardClass: state.os === 'other' ? 'answered-ng' : state.os ? 'answered-ok' : '',
+    alert: null,
+    cardClass: state.os ? 'answered-ok' : '',
   });
 
   // Q2: OS バージョン（OS選択後に表示）
