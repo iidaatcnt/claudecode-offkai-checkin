@@ -393,7 +393,6 @@ function updateDraft(qs) {
     lines.push('', `⚠️ 要確認：${ngItems.join(' / ')}`);
     statusEl.innerHTML = `<div class="alert alert-warn" style="margin-bottom:10px">⚠️ 要確認の項目があります。下書きをコピーして送ってください。</div>`;
   } else {
-    lines.push('', '全項目クリアです！よろしくお願いします 😊');
     statusEl.innerHTML = `<div class="alert alert-ok" style="margin-bottom:10px">✅ 全項目OK！下書きをコピーして送ってください。</div>`;
   }
 
