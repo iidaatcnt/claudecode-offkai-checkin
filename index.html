@@ -78,6 +78,7 @@
 
   .copy-btn  { display: block; width: 100%; margin-top: 12px; padding: 16px; background: var(--brand); color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .copy-btn:active { background: var(--brand-dark); }
+  .copy-btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
   .copy-msg  { text-align: center; font-size: 0.85rem; color: #27ae60; margin-top: 8px; min-height: 20px; }
   .reset-btn { display: block; width: 100%; margin-top: 10px; padding: 14px; background: white; color: #888; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
@@ -108,7 +109,7 @@
     <h2>📋 チャットに貼り付ける下書き</h2>
     <div id="draft-status"></div>
     <textarea id="draft" readonly placeholder="すべての質問に答えると、ここに下書きが表示されます。"></textarea>
-    <button class="copy-btn" onclick="copyDraft()">コピーする</button>
+    <button class="copy-btn" onclick="copyDraft()" disabled>コピーする</button>
     <div class="copy-msg" id="copy-msg"></div>
     <button class="reset-btn" onclick="resetAll()">リセット</button>
   </div>
@@ -140,7 +141,7 @@ function getQuestions() {
     buttons: [
       { label: 'まだ何もしていない', value: 'none',    color: 'green'  },
       { label: '途中まで試した',    value: 'partial', color: 'orange' },
-      { label: 'インストール完了',  value: 'done',    color: 'purple' },
+      { label: 'インストール完了',  value: 'done',    color: 'orange' },
     ],
     key: 'install',
     alert: state.install === 'done'
@@ -161,7 +162,7 @@ function getQuestions() {
     note: 'スマホ・タブレットでは「クロコ」は動きません。',
     buttons: [
       { label: 'Mac', value: 'mac', color: 'green' },
-      { label: 'Windows', value: 'win', color: 'blue' },
+      { label: 'Windows', value: 'win', color: 'orange' },
     ],
     key: 'os',
     alert: null,
@@ -220,7 +221,7 @@ function getQuestions() {
       note: '認証番号が届かないとアカウントが作れません。「自分宛てにテスト送信」して確認してください。',
       buttons: [
         { label: 'Yes', value: 'yes', color: 'green' },
-        { label: 'No',  value: 'no',  color: 'red'   },
+        { label: 'No',  value: 'no',  color: 'orange' },
       ],
       key: 'sms',
       alert: state.sms === 'no'
@@ -237,7 +238,7 @@ function getQuestions() {
       note: 'パスワード（PIN）を忘れていると、ソフトのインストールが一切できません。',
       buttons: [
         { label: 'Yes', value: 'yes', color: 'green' },
-        { label: 'No',  value: 'no',  color: 'red'   },
+        { label: 'No',  value: 'no',  color: 'orange' },
       ],
       key: 'login',
       alert: state.login === 'no'
@@ -254,7 +255,7 @@ function getQuestions() {
       note: 'ログインや認証に必要です。アカウント未作成の場合は事前に作成してください。',
       buttons: [
         { label: 'Yes', value: 'yes', color: 'green' },
-        { label: 'No',  value: 'no',  color: 'red'   },
+        { label: 'No',  value: 'no',  color: 'orange' },
       ],
       key: 'google',
       alert: state.google === 'no'
@@ -271,7 +272,7 @@ function getQuestions() {
       note: 'クロコは有料プラン専用です。デビットカード・プリペイドカードは使えない場合があります。',
       buttons: [
         { label: 'Yes', value: 'yes', color: 'green' },
-        { label: 'No',  value: 'no',  color: 'red'   },
+        { label: 'No',  value: 'no',  color: 'orange' },
       ],
       key: 'budget',
       alert: state.budget === 'no'
@@ -337,11 +338,14 @@ function updateDraft(qs) {
   // 未回答チェック
   const required = qs.map(q => q.key);
   const unanswered = required.filter(k => state[k] === null);
+  const copyBtn = document.querySelector('.copy-btn');
   if (unanswered.length > 0) {
     statusEl.innerHTML = '';
     draftEl.value = '';
+    copyBtn.disabled = true;
     return;
   }
+  copyBtn.disabled = false;
 
   // 下書き構築
   const installLabel = { none: 'まだ何もしていない', partial: '途中まで試した', done: 'インストール完了' }[state.install] || '';
