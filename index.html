@@ -119,12 +119,14 @@
 // ---- 状態 ----
 const state = {
   os: null,          // 'mac' | 'win'
-  osVersion: null,   // mac: 'yes'|'no'  /  win: 'new'|'mid'|'old'
+  osVersion: null,   // mac: 'tahoe'|'old'  /  win: 'new'|'old'
   sms: null,         // 'yes'|'no'
   login: null,       // 'yes'|'no'
   google: null,      // 'yes'|'no'
   budget: null,      // 'yes'|'no'
   install: null,     // 'none'|'partial'|'done'
+  screenshot: null,  // 'yes'|'no'
+  terminal: null,    // 'yes'|'no' (Mac のみ)
 };
 
 // ---- 質問定義 ----
@@ -175,8 +177,8 @@ function getQuestions() {
       id: 'q3',
       num: 3,
       tag: '【OS確認】',
-      text: 'macOS のバージョンを教えてください',
-      note: 'クロコ（Claude Code デスクトップ版）は macOS Tahoe（15）以上での動作が推奨されています。',
+      text: 'macOS のソフトウェアアップデートは完了していますか？',
+      note: 'MacBookは新品でも基本ソフトが古いとクロコはインストールできないし、アップデートはオフ会中には終わりません。',
       buttons: [
         { label: 'Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
         { label: 'Sequoia 以前 / わからない', value: 'old', color: 'orange' },
@@ -280,6 +282,50 @@ function getQuestions() {
         : null,
       cardClass: state.budget === 'yes' ? 'answered-ok' : state.budget === 'no' ? 'answered-ng' : '',
     });
+
+    // Q8: スクリーンショット（スキルチェック）
+    const ssNote = state.os === 'mac'
+      ? 'エラー画面などをスタッフに共有するときに使います。Mac: Command + Shift + 3（全体）/ Command + Shift + 4（範囲選択）'
+      : 'エラー画面などをスタッフに共有するときに使います。Windows: Windows + Shift + S（切り取り＆スケッチ）';
+    const ssAlert = state.os === 'mac'
+      ? 'Command + Shift + 3 で全体キャプチャ、Command + Shift + 4 で範囲選択キャプチャができます。当日一緒に練習しましょう！'
+      : 'Windows + Shift + S で切り取り＆スケッチが起動します。当日一緒に練習しましょう！';
+    qs.push({
+      id: 'q8',
+      num: 8,
+      tag: '【スキルチェック】',
+      text: 'スクリーンショット（スクショ）の撮り方を知っていますか？',
+      note: ssNote,
+      buttons: [
+        { label: '知っている',        value: 'yes', color: 'green'  },
+        { label: '知らない / 自信がない', value: 'no',  color: 'orange' },
+      ],
+      key: 'screenshot',
+      alert: state.screenshot === 'no'
+        ? { type: 'ok', text: '💡 ' + ssAlert }
+        : null,
+      cardClass: state.screenshot === 'yes' ? 'answered-ok' : state.screenshot === 'no' ? 'answered-warn' : '',
+    });
+
+    // Q9: ターミナル（スキルチェック・Mac のみ）
+    if (state.os === 'mac') {
+      qs.push({
+        id: 'q9',
+        num: 9,
+        tag: '【スキルチェック】',
+        text: 'ターミナルの開き方を知っていますか？',
+        note: 'クロコのインストールにターミナルを使います。Spotlight（Command + Space）で「ターミナル」と検索して開けます。',
+        buttons: [
+          { label: '知っている',        value: 'yes', color: 'green'  },
+          { label: '知らない / 自信がない', value: 'no',  color: 'orange' },
+        ],
+        key: 'terminal',
+        alert: state.terminal === 'no'
+          ? { type: 'ok', text: '💡 Command + Space でSpotlightを開き、「ターミナル」と入力してEnterで起動できます。当日一緒にやってみましょう！' }
+          : null,
+        cardClass: state.terminal === 'yes' ? 'answered-ok' : state.terminal === 'no' ? 'answered-warn' : '',
+      });
+    }
   }
 
   return qs;
@@ -328,6 +374,7 @@ function choose(key, value) {
 
 function resetRestState() {
   state.sms = null; state.login = null; state.google = null; state.budget = null;
+  state.screenshot = null; state.terminal = null;
 }
 
 // ---- 下書き生成 ----
@@ -359,7 +406,8 @@ function updateDraft(qs) {
     osVerLabel = map[state.osVersion] || '';
   }
 
-  const yn = v => v === 'yes' ? 'Yes' : 'No';
+  const yn  = v => v === 'yes' ? 'Yes' : 'No';
+  const ski = v => v === 'yes' ? '知っている' : '知らない・自信がない';
 
   const lines = [
     '問診チェック結果をお伝えします。',
@@ -371,15 +419,21 @@ function updateDraft(qs) {
     `5. PCログイン：${yn(state.login)}`,
     `6. Googleアカウント：${yn(state.google)}`,
     `7. 予算（クレカ）：${yn(state.budget)}`,
+    `8. スクショ：${ski(state.screenshot)}`,
   ];
+  if (state.os === 'mac') {
+    lines.push(`9. ターミナル：${ski(state.terminal)}`);
+  }
 
   const ngItems = [];
   if (state.os === 'mac' && state.osVersion === 'old') ngItems.push('macOS が Tahoe 未満の可能性あり');
   if (state.os === 'win' && state.osVersion === 'old') ngItems.push('PC が古い（5年以上前）');
-  if (state.sms    === 'no')  ngItems.push('SMS受信できない');
-  if (state.login  === 'no')  ngItems.push('PCにログインできない');
-  if (state.google === 'no')  ngItems.push('Googleアカウントなし');
-  if (state.budget === 'no')  ngItems.push('クレジットカードなし');
+  if (state.sms        === 'no')  ngItems.push('SMS受信できない');
+  if (state.login      === 'no')  ngItems.push('PCにログインできない');
+  if (state.google     === 'no')  ngItems.push('Googleアカウントなし');
+  if (state.budget     === 'no')  ngItems.push('クレジットカードなし');
+  if (state.screenshot === 'no')  ngItems.push('スクショの撮り方が不明');
+  if (state.os === 'mac' && state.terminal === 'no') ngItems.push('ターミナルの開き方が不明');
 
   if (ngItems.length > 0) {
     lines.push('', `⚠️ 要確認：${ngItems.join(' / ')}`);
