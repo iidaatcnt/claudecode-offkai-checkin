@@ -310,10 +310,10 @@ function getQuestions() {
 
     // Q9: スクリーンショット（スキルチェック）
     const ssNote = state.os === 'mac'
-      ? 'エラー画面などをスタッフに共有するときに使います。Mac: Command + Shift + 3（全体）/ Command + Shift + 4（範囲選択）'
+      ? 'エラー画面などをスタッフに共有するときに使います。Mac: Command + Shift + 4（範囲選択）'
       : 'エラー画面などをスタッフに共有するときに使います。Windows: Windows + Shift + S（切り取り＆スケッチ）';
     const ssAlert = state.os === 'mac'
-      ? 'Command + Shift + 3 で全体キャプチャ、Command + Shift + 4 で範囲選択キャプチャができます。当日一緒に練習しましょう！'
+      ? 'Command + Shift + 4 で範囲選択してキャプチャできます。当日一緒に練習しましょう！'
       : 'Windows + Shift + S で切り取り＆スケッチが起動します。当日一緒に練習しましょう！';
     qs.push({
       id: 'q9',
