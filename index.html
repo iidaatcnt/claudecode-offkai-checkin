@@ -179,14 +179,14 @@ function getQuestions() {
       num: 3,
       tag: '【OS確認】',
       text: 'macOS のソフトウェアアップデートは完了していますか？',
-      note: 'MacBookは新品でも基本ソフトが古いとクロコはインストールできないし、アップデートはオフ会中には終わりません。',
+      note: '事前に「システム設定 → 一般 → ソフトウェアアップデート」から最新版にアップデートしてください。MacBookが新品でも基本ソフトが最新とは限りません。基本ソフトのアップデートは時間がかかるのでオフ会中には終わりません。',
       buttons: [
         { label: 'Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
         { label: 'Sequoia 以前 / わからない', value: 'old', color: 'orange' },
       ],
       key: 'osVersion',
       alert: state.osVersion === 'old'
-        ? { type: 'warn', text: '⚠️ macOS Tahoe（15）以外ではクロコが動作しない可能性があります。\n事前に「システム設定 → 一般 → ソフトウェアアップデート」から Tahoe にアップデートしてください。\nオフ会当日のアップデートは時間内に終わりません。' }
+        ? { type: 'warn', text: '⚠️ アップデートが必要です。オフ会前に必ず完了させてください。\n「システム設定 → 一般 → ソフトウェアアップデート」から最新版（Tahoe / macOS 15）にアップデートしてください。' }
         : null,
       cardClass: state.osVersion === 'tahoe' ? 'answered-ok' : state.osVersion === 'old' ? 'answered-warn' : '',
     });
