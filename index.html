@@ -148,7 +148,7 @@ function getQuestions() {
     ],
     key: 'install',
     alert: state.install === 'done'
-      ? { type: 'stop', text: 'このオフ会はクロコを「これからインストールする初心者」を対象にしています。\n参加は歓迎しますが、インストール後の活用方法・技術的なアドバイスなどには対応できません。' }
+      ? { type: 'stop', text: 'このオフ会はクロコを「これからインストールする初心者」を対象にしています。\n参加は歓迎しますが、オフ会の内容以外の話題についてお答えできません。個別の活用方法・技術的なアドバイスを求めての参加はご遠慮ください。' }
       : null,
     cardClass: state.install === 'done' ? 'answered-stop' : state.install === 'partial' ? 'answered-warn' : state.install === 'none' ? 'answered-ok' : '',
   });
@@ -179,14 +179,14 @@ function getQuestions() {
       num: 3,
       tag: '【OS確認】',
       text: 'macOS のソフトウェアアップデートは完了していますか？',
-      note: '事前に「システム設定 → 一般 → ソフトウェアアップデート」から最新版にアップデートしてください。MacBookが新品でも基本ソフトが最新とは限りません。基本ソフトのアップデートは時間がかかるのでオフ会中には終わりません。',
+      note: 'クロコは macOS Tahoe（15）以上が必要です。',
       buttons: [
         { label: 'Tahoe（macOS 15）', value: 'tahoe', color: 'green'  },
         { label: 'Sequoia 以前 / わからない', value: 'old', color: 'orange' },
       ],
       key: 'osVersion',
-      alert: state.osVersion === 'old'
-        ? { type: 'warn', text: '⚠️ アップデートが必要です。オフ会前に必ず完了させてください。\n「システム設定 → 一般 → ソフトウェアアップデート」から最新版（Tahoe / macOS 15）にアップデートしてください。' }
+      alert: state.osVersion
+        ? { type: state.osVersion === 'old' ? 'warn' : 'ok', text: '事前に「システム設定 → 一般 → ソフトウェアアップデート」から最新版にアップデートしてください。MacBookが新品でも基本ソフトが最新とは限りません。基本ソフトのアップデートは時間がかかるのでオフ会に参加中には終わりません。' }
         : null,
       cardClass: state.osVersion === 'tahoe' ? 'answered-ok' : state.osVersion === 'old' ? 'answered-warn' : '',
     });
@@ -228,7 +228,7 @@ function getQuestions() {
       ],
       key: 'sms',
       alert: state.sms === 'no'
-        ? { type: 'ng', text: 'SMS を受信できないとアカウントが作れません。キャリア設定やフィルターをご確認ください。' }
+        ? { type: 'ng', text: 'SMS を受信できないとクロコのインストールはできません。オフ会に参加する前に、携帯電話会社にご確認ください。' }
         : null,
       cardClass: state.sms === 'yes' ? 'answered-ok' : state.sms === 'no' ? 'answered-ng' : '',
     });
@@ -261,9 +261,11 @@ function getQuestions() {
         { label: 'No',  value: 'no',  color: 'orange' },
       ],
       key: 'google',
-      alert: state.google === 'no'
-        ? { type: 'warn', text: '事前に Google アカウントを作成してきてください（無料）。' }
-        : null,
+      alert: state.google === 'yes'
+        ? { type: 'ok', text: 'インストール中のユーザー認証に使用します。メールが受信できる状態であることを確認してください。' }
+        : state.google === 'no'
+          ? { type: 'warn', text: '事前に Google アカウントを作成してきてください（無料）。' }
+          : null,
       cardClass: state.google === 'yes' ? 'answered-ok' : state.google === 'no' ? 'answered-ng' : '',
     });
 
@@ -288,9 +290,6 @@ function getQuestions() {
     const basicNote = state.os === 'mac'
       ? 'Mac では「コピー = Command+C」「ペースト = Command+V」。Windows の Ctrl キーが Command キーに対応します。'
       : '「コピー = Ctrl+C」「ペースト = Ctrl+V」など。ファイルのダブルクリック・ドラッグ＆ドロップも使います。';
-    const basicAlert = state.os === 'mac'
-      ? 'Mac の基本操作はスタッフが丁寧にサポートします。特にWindowsから乗り換えた方は遠慮なくお申し出ください！'
-      : 'PC の基本操作はスタッフが丁寧にサポートします。遠慮なくお申し出ください！';
     qs.push({
       id: 'q8',
       num: 8,
@@ -303,7 +302,7 @@ function getQuestions() {
       ],
       key: 'basicOps',
       alert: state.basicOps === 'no'
-        ? { type: 'ok', text: '💡 ' + basicAlert }
+        ? { type: 'warn', text: '限られたオフ会の時間内では、コピペ・ダブルクリック・ドラッグ＆ドロップなど基本的なPC操作の個別フォローはできません。\nせっかくオフ会に参加したのにクロコのインストールが終わらないままにならないよう、事前に練習しておいてください。' }
         : null,
       cardClass: state.basicOps === 'yes' ? 'answered-ok' : state.basicOps === 'no' ? 'answered-warn' : '',
     });
