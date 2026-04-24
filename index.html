@@ -125,6 +125,7 @@ const state = {
   google: null,      // 'yes'|'no'
   budget: null,      // 'yes'|'no'
   install: null,     // 'none'|'partial'|'done'
+  basicOps: null,    // 'yes'|'no'
   screenshot: null,  // 'yes'|'no'
   terminal: null,    // 'yes'|'no' (Mac のみ)
 };
@@ -283,7 +284,31 @@ function getQuestions() {
       cardClass: state.budget === 'yes' ? 'answered-ok' : state.budget === 'no' ? 'answered-ng' : '',
     });
 
-    // Q8: スクリーンショット（スキルチェック）
+    // Q8: 基本PC操作（スキルチェック）
+    const basicNote = state.os === 'mac'
+      ? 'Mac では「コピー = Command+C」「ペースト = Command+V」。Windows の Ctrl キーが Command キーに対応します。'
+      : '「コピー = Ctrl+C」「ペースト = Ctrl+V」など。ファイルのダブルクリック・ドラッグ＆ドロップも使います。';
+    const basicAlert = state.os === 'mac'
+      ? 'Mac の基本操作はスタッフが丁寧にサポートします。特にWindowsから乗り換えた方は遠慮なくお申し出ください！'
+      : 'PC の基本操作はスタッフが丁寧にサポートします。遠慮なくお申し出ください！';
+    qs.push({
+      id: 'q8',
+      num: 8,
+      tag: '【スキルチェック】',
+      text: 'コピペ・ダブルクリック・ドラッグ＆ドロップなど、基本的なPC操作はできますか？',
+      note: basicNote,
+      buttons: [
+        { label: 'できる',         value: 'yes', color: 'green'  },
+        { label: '自信がない / わからない', value: 'no',  color: 'orange' },
+      ],
+      key: 'basicOps',
+      alert: state.basicOps === 'no'
+        ? { type: 'ok', text: '💡 ' + basicAlert }
+        : null,
+      cardClass: state.basicOps === 'yes' ? 'answered-ok' : state.basicOps === 'no' ? 'answered-warn' : '',
+    });
+
+    // Q9: スクリーンショット（スキルチェック）
     const ssNote = state.os === 'mac'
       ? 'エラー画面などをスタッフに共有するときに使います。Mac: Command + Shift + 3（全体）/ Command + Shift + 4（範囲選択）'
       : 'エラー画面などをスタッフに共有するときに使います。Windows: Windows + Shift + S（切り取り＆スケッチ）';
@@ -291,8 +316,8 @@ function getQuestions() {
       ? 'Command + Shift + 3 で全体キャプチャ、Command + Shift + 4 で範囲選択キャプチャができます。当日一緒に練習しましょう！'
       : 'Windows + Shift + S で切り取り＆スケッチが起動します。当日一緒に練習しましょう！';
     qs.push({
-      id: 'q8',
-      num: 8,
+      id: 'q9',
+      num: 9,
       tag: '【スキルチェック】',
       text: 'スクリーンショット（スクショ）の撮り方を知っていますか？',
       note: ssNote,
@@ -307,11 +332,11 @@ function getQuestions() {
       cardClass: state.screenshot === 'yes' ? 'answered-ok' : state.screenshot === 'no' ? 'answered-warn' : '',
     });
 
-    // Q9: ターミナル（スキルチェック・Mac のみ）
+    // Q10: ターミナル（スキルチェック・Mac のみ）
     if (state.os === 'mac') {
       qs.push({
-        id: 'q9',
-        num: 9,
+        id: 'q10',
+        num: 10,
         tag: '【スキルチェック】',
         text: 'ターミナルの開き方を知っていますか？',
         note: 'クロコのインストールにターミナルを使います。Spotlight（Command + Space）で「ターミナル」と検索して開けます。',
@@ -374,7 +399,7 @@ function choose(key, value) {
 
 function resetRestState() {
   state.sms = null; state.login = null; state.google = null; state.budget = null;
-  state.screenshot = null; state.terminal = null;
+  state.basicOps = null; state.screenshot = null; state.terminal = null;
 }
 
 // ---- 下書き生成 ----
@@ -408,6 +433,7 @@ function updateDraft(qs) {
 
   const yn  = v => v === 'yes' ? 'Yes' : 'No';
   const ski = v => v === 'yes' ? '知っている' : '知らない・自信がない';
+  const ops = v => v === 'yes' ? 'できる' : '自信がない';
 
   const lines = [
     '問診チェック結果をお伝えします。',
@@ -419,10 +445,11 @@ function updateDraft(qs) {
     `5. PCログイン：${yn(state.login)}`,
     `6. Googleアカウント：${yn(state.google)}`,
     `7. 予算（クレカ）：${yn(state.budget)}`,
-    `8. スクショ：${ski(state.screenshot)}`,
+    `8. 基本操作：${ops(state.basicOps)}`,
+    `9. スクショ：${ski(state.screenshot)}`,
   ];
   if (state.os === 'mac') {
-    lines.push(`9. ターミナル：${ski(state.terminal)}`);
+    lines.push(`10. ターミナル：${ski(state.terminal)}`);
   }
 
   const ngItems = [];
@@ -432,6 +459,7 @@ function updateDraft(qs) {
   if (state.login      === 'no')  ngItems.push('PCにログインできない');
   if (state.google     === 'no')  ngItems.push('Googleアカウントなし');
   if (state.budget     === 'no')  ngItems.push('クレジットカードなし');
+  if (state.basicOps   === 'no')  ngItems.push('基本PC操作に不安あり');
   if (state.screenshot === 'no')  ngItems.push('スクショの撮り方が不明');
   if (state.os === 'mac' && state.terminal === 'no') ngItems.push('ターミナルの開き方が不明');
 
