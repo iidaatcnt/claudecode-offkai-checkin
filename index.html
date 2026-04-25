@@ -82,6 +82,10 @@
   .copy-msg  { text-align: center; font-size: 0.85rem; color: #27ae60; margin-top: 8px; min-height: 20px; }
   .reset-btn { display: block; width: 100%; margin-top: 10px; padding: 14px; background: white; color: #888; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
+  /* モバイル警告バナー */
+  .mobile-warning { background: #fdedec; border: 2px solid #e74c3c; border-radius: 8px; padding: 14px 16px; margin: 12px 0; color: #922b21; font-size: 0.9rem; line-height: 1.7; }
+  .mobile-warning strong { display: block; margin-bottom: 6px; font-size: 0.95rem; }
+
   /* SP 調整 */
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
@@ -103,6 +107,8 @@
     こんにちは。オフ会の受付代わりに、以下の問診チェックの結果をこのチャットで教えてください！
   </div>
 
+  <div id="mobile-banner"></div>
+
   <div id="q-list"></div>
 
   <div class="result-box">
@@ -116,6 +122,11 @@
 </div>
 
 <script>
+// ---- デバイス検出 ----
+const isMobileDevice = () => {
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+};
+
 // ---- 状態 ----
 const state = {
   os: null,          // 'mac' | 'win'
@@ -128,6 +139,7 @@ const state = {
   basicOps: null,    // 'yes'|'no'
   screenshot: null,  // 'yes'|'no'
   terminal: null,    // 'yes'|'no' (Mac のみ)
+  deviceType: isMobileDevice() ? 'mobile' : 'desktop',  // 'mobile' | 'desktop'
 };
 
 // ---- 質問定義 ----
@@ -356,7 +368,22 @@ function getQuestions() {
 }
 
 // ---- 描画 ----
+function renderMobileBanner() {
+  const banner = document.getElementById('mobile-banner');
+  if (state.deviceType === 'mobile') {
+    banner.innerHTML = `
+      <div class="mobile-warning">
+        <strong>⚠️ スマートフォンからのアクセスです</strong>
+        「システム設定」などの操作確認はパソコンから実施してください。オフ会ではパソコンを必ずご持参ください。
+      </div>
+    `;
+  } else {
+    banner.innerHTML = '';
+  }
+}
+
 function render() {
+  renderMobileBanner();
   const qs = getQuestions();
   const container = document.getElementById('q-list');
   container.innerHTML = '';
@@ -433,9 +460,12 @@ function updateDraft(qs) {
   const yn  = v => v === 'yes' ? 'Yes' : 'No';
   const ski = v => v === 'yes' ? '知っている' : '知らない・自信がない';
   const ops = v => v === 'yes' ? 'できる' : '自信がない';
+  const deviceLabel = state.deviceType === 'mobile' ? 'スマートフォン' : 'パソコン';
 
   const lines = [
     '問診チェック結果をお伝えします。',
+    '',
+    `【回答端末】${deviceLabel}`,
     '',
     `1. インストール状況：${installLabel}`,
     `2. 端末：${osLabel}`,
@@ -449,6 +479,14 @@ function updateDraft(qs) {
   ];
   if (state.os === 'mac') {
     lines.push(`10. ターミナル：${ski(state.terminal)}`);
+  }
+
+  // スマートフォンで回答した場合の警告
+  if (state.deviceType === 'mobile') {
+    lines.push('');
+    lines.push('⚠️ スマートフォンからのご回答のようです。');
+    lines.push('「システム設定」などの操作確認はパソコンから実施することをお勧めします。');
+    lines.push('オフ会ではパソコンを必ずご持参ください。');
   }
 
   const ngItems = [];
